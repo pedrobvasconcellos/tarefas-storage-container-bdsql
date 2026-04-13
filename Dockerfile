@@ -1,26 +1,23 @@
-FROM node:20-alpine AS base
+#Imagem base
+FROM node:20-alpine
 
-FROM base AS deps
+#Diretório de trabalho
 WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
 
-FROM base AS builder
-WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
+#Copiar arquivos de dependência
+COPY package*.json ./
+
+#Instalar dependências
+RUN npm install
+
+#Copiar restante do projeto
 COPY . .
+
+#Build da aplicação
 RUN npm run build
 
-FROM base AS runner
-WORKDIR /app
-ENV NODE_ENV=production
-ENV HOSTNAME=0.0.0.0
-ENV PORT=8080
+#Expor porta
+EXPOSE 3000
 
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-
-EXPOSE 8080
-
-CMD ["node", "server.js"]
+#Rodar aplicação
+CMD ["npm", "start"]
